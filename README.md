@@ -15,3 +15,12 @@ Ketika sebuah client mengirim pesan, server menerima pesan tersebut lalu melakuk
 ![alt text](image-2.png)
 ![alt text](image-3.png)
 
+## Experiment 2.2: Mengubah Port
+
+Port websocket diubah dari `2000` menjadi `8080`.
+
+Perubahan ini harus dilakukan pada sisi server maupun client. Server harus melakukan listen pada port `8080`, sedangkan client harus melakukan koneksi ke:
+
+ws://127.0.0.1:8080
+
+Jika hanya salah satu sisi yang diubah, maka koneksi websocket akan gagal karena server dan client menggunakan port yang berbeda.
