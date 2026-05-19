@@ -24,3 +24,18 @@ Perubahan ini harus dilakukan pada sisi server maupun client. Server harus melak
 ws://127.0.0.1:8080
 
 Jika hanya salah satu sisi yang diubah, maka koneksi websocket akan gagal karena server dan client menggunakan port yang berbeda.
+
+## Experiment 2.3: Modifikasi Broadcast Chat
+
+Pada eksperimen ini, saya melakukan modifikasi pada aplikasi broadcast chat dengan menambahkan informasi IP address dan port pengirim pada setiap pesan yang dikirim.
+
+Sebelumnya, pesan yang diterima client hanya menampilkan isi pesan tanpa identitas pengirim. Saya mengubah bagian server sehingga setiap pesan broadcast memiliki format yang lebih informatif.
+
+Perubahan yang dilakukan:
+
+println!("From client [{addr}] => {text}");   
+let _ = bcast_tx.send(format!("Client [{addr}] says: {text}"));
+
+Dengan perubahan ini, setiap client dapat mengetahui siapa pengirim pesan berdasarkan IP address dan port koneksinya.
+
+![alt text](image-4.png)

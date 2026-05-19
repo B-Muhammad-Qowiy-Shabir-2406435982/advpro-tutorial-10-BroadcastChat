@@ -3,7 +3,7 @@ use futures_util::stream::StreamExt;
 use std::error::Error;
 use std::net::SocketAddr;
 use tokio::net::{TcpListener, TcpStream};
-use tokio::sync::broadcast::{Sender, channel};
+use tokio::sync::broadcast::{channel, Sender};
 use tokio_websockets::{Message, ServerBuilder, WebSocketStream};
 
 async fn handle_connection(
@@ -11,8 +11,6 @@ async fn handle_connection(
     mut ws_stream: WebSocketStream<TcpStream>,
     bcast_tx: Sender<String>,
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
-
-    // TODO: For a hint, see the description of the task below.
     let mut bcast_rx = bcast_tx.subscribe();
 
     loop {
@@ -20,12 +18,13 @@ async fn handle_connection(
             msg = ws_stream.next() => {
                 match msg {
                     Some(Ok(msg)) => {
-                        if let Some(text) = msg.as_text() {
-                            println!("{addr}: {text}");
-                            bcast_tx.send(format!("{addr}: {text}"))?;
-                        }
+                        let text = msg.as_text().unwrap_or("");
+
+                        println!("From client [{addr}] => {text}");
+                        
+                        let _ = bcast_tx.send(format!("Client [{addr}] says: {text}"));
                     }
-                    Some(Err(e)) => return Err(e.into()),
+                    Some(Err(e)) => return Err(Box::new(e)),
                     None => break,
                 }
             }
@@ -49,14 +48,15 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let (bcast_tx, _) = channel(16);
 
     let listener = TcpListener::bind("127.0.0.1:8080").await?;
-    println!("listening on port 8080");
+    println!("Listening on port 8080");
 
     loop {
         let (socket, addr) = listener.accept().await?;
-        println!("New connection from {addr:?}");
+        println!("New connection from {addr}");
+
         let bcast_tx = bcast_tx.clone();
+
         tokio::spawn(async move {
-            // Wrap the raw TCP stream into a websocket.
             let (_req, ws_stream) = ServerBuilder::new().accept(socket).await?;
 
             handle_connection(addr, ws_stream, bcast_tx).await
